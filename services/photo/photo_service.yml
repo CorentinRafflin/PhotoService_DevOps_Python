@@ -1,0 +1,156 @@
+---
+# based on the example at http://coderobot.downley.net/swagger-driven-testing-in-python.html
+
+swagger: '2.0'
+info:
+  title: Photo service API
+  version: "0.1"
+consumes:
+  - application/json
+  - multipart/form-data
+produces:
+  - application/json
+
+# I'd rather not deal with security right now.
+#
+# security:
+#   # enable OAuth protection for all REST endpoints
+#   # (only active if the TOKENINFO_URL environment variable is set)
+#   - oauth2: [uid]
+
+paths:
+  /gallery/{display_name}:
+    post:
+      operationId: photo_service.post_photo
+      summary: Upload a photo
+      consumes:
+         - multipart/form-data
+      parameters:
+        - $ref: '#/parameters/display_name'
+        - name: photo
+          in: formData
+          type: file
+          description: the photo to upload
+      responses:
+        201:
+          description: New photo created
+        404:
+          description: Photographer not found
+    get:
+      operationId: photo_service.get_photos
+      summary: Get all photos of a photographer
+      parameters:
+        - $ref: '#/parameters/display_name'
+      responses:
+        200:
+          description: Returns a list of photos URIs
+          schema:
+            type: array
+            items:
+              type: string
+  /photo/{display_name}/{photo_id}:
+    get:
+      # tags: [Photo]
+      operationId: photo_service.get_single_photo
+      summary: Get a single photo
+      parameters:
+        - $ref: '#/parameters/display_name'
+        - $ref: '#/parameters/photo_id'
+      produces:
+        - image/jpeg
+        - image/gif
+        - image/png
+        - image/bmp        
+      responses:
+        200:
+          description: Return the photo
+          schema:
+            type: file
+        404:
+          description: Photo does not exist.
+    delete:
+      operationId: photo_service.delete_photo
+      summary: Remove a photo
+      parameters:
+        - $ref: '#/parameters/display_name'
+        - $ref: '#/parameters/photo_id'       
+      responses:
+        204:
+          description: Photo was deleted.
+        404:
+          description: Photo does not exist.
+  /photo/{display_name}/{photo_id}/attributes:
+    get:
+      operationId: photo_service.get_photo_data
+      summary: Get metadata of a photo
+      parameters:
+        - $ref: '#/parameters/display_name'
+        - $ref: '#/parameters/photo_id'       
+      responses:
+        200:
+          description: Return the metadata of a photo.
+        404:
+          description: Photo does not exist.
+    put:
+      operationId: photo_service.put_photo_data
+      summary: Update a single photo
+      parameters:
+        - $ref: '#/parameters/display_name'
+        - $ref: '#/parameters/photo_id'       
+        - name: photo
+          in: body
+          schema:
+            $ref: '#/definitions/Photo'
+      responses:
+        202:
+          description: Attributes of the photo modified.
+        404:
+          description: Photo does not exist.      
+
+parameters:
+  display_name:
+    name: display_name
+    description: display name of the photographer.
+    in: path
+    type: string
+    required: true
+    pattern: "^[a-zA-Z0-9-]+$"
+    x-example: 'joe'
+  photo_id:
+    name: photo_id
+    description: id of the photo
+    in: path
+    type: string
+    required: true
+
+definitions:
+  Photo:
+    type: object
+    properties:
+      title:
+        type: string
+        description: |
+          The "title" of the photo
+        example: "Vacation"
+        minLength: 1
+        maxLength: 100
+      location:
+        type: string
+        description: The "location"
+        example: "Asia"
+        minLength: 1
+        maxLength: 100
+      comment:
+        type: string
+        description: A comment
+        example: "Favorite"
+        minLength: 1
+        maxLength: 100
+      tags:
+        type: array 
+        description: tags
+        items:
+          type: string
+        example: ["landscape"]
+        minLength: 1
+

@@ -1,0 +1,121 @@
+heat_template_version: ocata
+
+description: template for a MONGO server and a BASTION host
+
+parameters:
+  key:
+    type: string
+    description: Key Name
+
+resources:
+
+
+  mongo_port_one:
+    type: OS::Neutron::Port
+    properties:
+      network: mynet
+      security_groups: [internal_security_group]
+      fixed_ips:
+        - subnet_id: mysubnet
+          ip_address: 192.168.10.12
+
+  mongo_one:
+    type: OS::Nova::Server
+    properties:
+      name: mongo_one
+      image: Ubuntu_16.04.latest
+      flavor: m1.small
+      key_name: { get_param: key}
+      networks:
+        - port: { get_resource: mongo_port_one} 
+      user_data: |
+        #!/bin/bash
+        export IP=`ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+        export HOSTNAME=`hostname`
+        tee -a /etc/hosts <<EOF
+        $IP $HOSTNAME
+        EOF
+        echo 'Acquire::http::Proxy "http://apt-cacher-01.priv.enst-bretagne.fr:3142";' > /etc/apt/apt.conf.d/01proxy
+        localectl set-locale LANG=en_US.UTF-8 LANGUAGE="en_US:en"
+        apt-get update
+        apt-get install -y python
+        apt-get install -y build-essential python-dev python-setuptools
+        git clone git://github.com/mongodb/mongo-python-driver.git pymongo
+        cd pymongo
+        python setup.py install
+        reboot
+
+  mongo_port_two:
+    type: OS::Neutron::Port
+    properties:
+      network: mynet
+      security_groups: [ internal_security_group]
+      fixed_ips:
+        - subnet_id: mysubnet
+          ip_address: 192.168.10.13
+
+  mongo_two:
+    type: OS::Nova::Server
+    properties:
+      name: mongo_two
+      image: Ubuntu_16.04.latest
+      flavor: m1.small
+      key_name: { get_param: key}
+      networks:
+        - port: { get_resource: mongo_port_two} 
+      user_data: |
+        #!/bin/bash
+        export IP=`ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+        export HOSTNAME=`hostname`
+        tee -a /etc/hosts <<EOF
+        $IP $HOSTNAME
+        EOF
+        echo 'Acquire::http::Proxy "http://apt-cacher-01.priv.enst-bretagne.fr:3142";' > /etc/apt/apt.conf.d/01proxy
+        localectl set-locale LANG=en_US.UTF-8 LANGUAGE="en_US:en"
+        apt-get update
+        apt-get install -y python
+        apt-get install -y build-essential python-dev python-setuptools
+        git clone git://github.com/mongodb/mongo-python-driver.git pymongo
+        cd pymongo
+        python setup.py install
+        reboot
+
+
+  mongo_port_three:
+    type: OS::Neutron::Port
+    properties:
+      network: mynet
+      security_groups: [ internal_security_group]
+      fixed_ips:
+        - subnet_id: mysubnet
+          ip_address: 192.168.10.14
+
+  mongo_three:
+    type: OS::Nova::Server
+    properties:
+      name: mongo_three
+      image: Ubuntu_16.04.latest
+      flavor: m1.small
+      key_name: { get_param: key}
+      networks:
+        - port: { get_resource: mongo_port_three} 
+      user_data: |
+        #!/bin/bash
+        export IP=`ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+        export HOSTNAME=`hostname`
+        tee -a /etc/hosts <<EOF
+        $IP $HOSTNAME
+        EOF
+        echo 'Acquire::http::Proxy "http://apt-cacher-01.priv.enst-bretagne.fr:3142";' > /etc/apt/apt.conf.d/01proxy
+        localectl set-locale LANG=en_US.UTF-8 LANGUAGE="en_US:en"
+        apt-get update
+        apt-get install -y python
+        apt-get install -y build-essential python-dev python-setuptools
+        git clone git://github.com/mongodb/mongo-python-driver.git pymongo
+        cd pymongo
+        python setup.py install
+        reboot
+
+
+
+  

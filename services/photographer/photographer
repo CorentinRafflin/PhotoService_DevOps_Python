@@ -1,0 +1,14 @@
+<html>
+<head><title>Index of /files/tp4/src/ms/photographer/</title></head>
+<body bgcolor="white">
+<h1>Index of /files/tp4/src/ms/photographer/</h1><hr><pre><a href="../">../</a>
+<a href="conftest.py">conftest.py</a>                                        23-Apr-2018 09:06                 532
+<a href="photographer.py">photographer.py</a>                                    23-Apr-2018 09:07                 293
+<a href="photographer_mongo_wrapper.py">photographer_mongo_wrapper.py</a>                      23-Apr-2018 09:07                1431
+<a href="photographer_service.py">photographer_service.py</a>                            23-Apr-2018 09:07                2332
+<a href="photographer_service.yml">photographer_service.yml</a>                           23-Apr-2018 09:07                3248
+<a href="photographer_service_main.py">photographer_service_main.py</a>                       23-Apr-2018 09:07                 518
+<a href="robustify.py">robustify.py</a>                                       23-Apr-2018 09:07                 586
+<a href="test_photographer.py">test_photographer.py</a>                               23-Apr-2018 09:07                2696
+</pre><hr></body>
+</html>

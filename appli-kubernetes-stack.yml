@@ -1,0 +1,158 @@
+heat_template_version: ocata
+
+description: template for Kubernetes 1 master and three slaves
+
+parameters:
+  key:
+    type: string
+    description: Key Name
+
+resources:
+
+  kub_master_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: "Enable incoming traffic on ports 6443 and 30300 to the master"
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          port_range_min: 6443
+          port_range_max: 6443
+          protocol: tcp
+          direction: ingress
+        - remote_ip_prefix: 0.0.0.0/0
+          port_range_min: 30300
+          port_range_max: 30300
+          protocol: tcp
+          direction: ingress
+        - remote_ip_prefix: 0.0.0.0/0
+          port_range_min: 6443
+          port_range_max: 6443
+          protocol: udp
+          direction: ingress
+        - remote_ip_prefix: 0.0.0.0/0
+          port_range_min: 30300
+          port_range_max: 30300
+          protocol: udp
+          direction: ingress
+        - remote_ip_prefix: 0.0.0.0/0
+          port_range_min: 6443
+          port_range_max: 6443
+          protocol: icmp
+          direction: ingress
+        - remote_ip_prefix: 0.0.0.0/0
+          port_range_min: 30300
+          port_range_max: 30300
+          protocol: icmp
+          direction: ingress
+
+  kub_master_port:
+    type: OS::Neutron::Port
+    properties:
+      network: mynet
+      security_groups: [ internal_security_group, kub_master_security_group]
+      fixed_ips:
+        - subnet_id: mysubnet
+          ip_address: 192.168.10.20
+
+  floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: external
+      port_id: { get_resource: kub_master_port }
+
+  kub_master:
+    type: OS::Nova::Server
+    properties:
+      name: kub_master
+      image: Ubuntu_16.04.latest
+      flavor: s10.medium
+      key_name: { get_param: key}
+      networks:
+        - port: { get_resource: kub_master_port} 
+      user_data: |
+        #!/bin/bash
+        export IP=`ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+        export HOSTNAME=`hostname`
+        tee -a /etc/hosts <<EOF
+        $IP $HOSTNAME
+        EOF
+        echo 'Acquire::http::Proxy "http://apt-cacher-01.priv.enst-bretagne.fr:3142";' > /etc/apt/apt.conf.d/01proxy
+        localectl set-locale LANG=en_US.UTF-8 LANGUAGE="en_US:en"
+        reboot
+        sudo apt-get update
+        sudo apt-get install python
+        reboot
+
+
+
+  kub_slave_port_one:
+    type: OS::Neutron::Port
+    properties:
+      network: mynet
+      security_groups: [ internal_security_group, kub_master_security_group]
+      fixed_ips:
+        - subnet_id: mysubnet
+          ip_address: 192.168.10.21
+
+  floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: external
+      port_id: { get_resource: kub_slave_port_one }
+
+  kub_slave_one:
+    type: OS::Nova::Server
+    properties:
+      name: kub_slave_one
+      image: Ubuntu_16.04.latest
+      flavor: s10.small
+      key_name: { get_param: key}
+      networks:
+        - port: { get_resource: kub_slave_port_one} 
+      user_data: |
+        #!/bin/bash
+        export IP=`ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+        export HOSTNAME=`hostname`
+        tee -a /etc/hosts <<EOF
+        $IP $HOSTNAME
+        EOF
+        echo 'Acquire::http::Proxy "http://apt-cacher-01.priv.enst-bretagne.fr:3142";' > /etc/apt/apt.conf.d/01proxy
+        localectl set-locale LANG=en_US.UTF-8 LANGUAGE="en_US:en"
+        reboot
+        sudo apt-get update
+        sudo apt-get install python
+        reboot
+  
+  kub_slave_port_two:
+    type: OS::Neutron::Port
+    properties:
+      network: mynet
+      security_groups: [ internal_security_group]
+      fixed_ips:
+        - subnet_id: mysubnet
+          ip_address: 192.168.10.22
+
+  kub_slave_two:
+    type: OS::Nova::Server
+    properties:
+      name: kub_slave_two
+      image: Ubuntu_16.04.latest
+      flavor: s10.small
+      key_name: { get_param: key}
+      networks:
+        - port: { get_resource: kub_slave_port_two} 
+      user_data: |
+        #!/bin/bash
+        export IP=`ifconfig ens3 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+        export HOSTNAME=`hostname`
+        tee -a /etc/hosts <<EOF
+        $IP $HOSTNAME
+        EOF
+        echo 'Acquire::http::Proxy "http://apt-cacher-01.priv.enst-bretagne.fr:3142";' > /etc/apt/apt.conf.d/01proxy
+        localectl set-locale LANG=en_US.UTF-8 LANGUAGE="en_US:en"
+        reboot  
+        sudo apt-get update
+        sudo apt-get install python
+        reboot
+  
+  

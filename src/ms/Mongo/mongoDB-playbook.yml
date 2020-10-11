@@ -1,0 +1,28 @@
+---
+
+- hosts: all  
+  tasks:
+    - name: Add an apt key by id from a keyserver
+      apt_key:
+        keyserver: keyserver.ubuntu.com
+        id: 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
+ 
+    - name: Execute the command in remote shell to create a list file for MongoDB
+      apt_repository : 
+        repo: deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.6 multiverse
+        state: present
+
+    - name: Update repositories cache and install package
+      apt:
+        name: mongodb-org
+        update_cache: yes
+        state: latest
+
+    - name: Start service, if not running
+      service:
+       name: mongod
+       state: started
+
+  become: true
+  become_user: root
+

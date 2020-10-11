@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: photo-deployment
+  labels:
+    app: photo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: photo
+  template:
+    metadata:
+      labels:
+        app: photo
+    spec:
+      containers:
+      - name: photo-containers
+        image: registry.cloud.rennes.enst-bretagne.fr:5000/photo_service_07
+        ports:
+        - containerPort: 8080

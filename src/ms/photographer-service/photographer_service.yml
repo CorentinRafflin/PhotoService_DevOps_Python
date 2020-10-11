@@ -1,0 +1,125 @@
+---
+# based on the example at http://coderobot.downley.net/swagger-driven-testing-in-python.html
+
+swagger: '2.0'
+info:
+  title: Photographer service API
+  version: "0.1"
+consumes:
+  - application/json
+produces:
+  - application/json
+
+# I'd rather not deal with security right now.
+#
+# security:
+#   # enable OAuth protection for all REST endpoints
+#   # (only active if the TOKENINFO_URL environment variable is set)
+#   - oauth2: [uid]
+
+paths:
+  /photographers:
+    post:
+      operationId: photographer_service.post_photographers
+      summary: Create a new photographer
+      parameters:
+        - name: photographer
+          in: body
+          schema:
+            $ref: '#/definitions/Photographer'
+      responses:
+        201:
+          description: New photographer created
+        409:
+          description: Photographer already exists with this display_name
+    get:
+      operationId: photographer_service.get_photographers
+      summary: Get all photographers
+      parameters:
+        - name: offset
+          in: query
+          type: integer
+          minimum: 0
+          default: 0
+          x-example: 0
+        - name: limit
+          in: query
+          type: integer
+          minimum: 0
+          default: 10
+          x-example: 10
+      responses:
+        200:
+          description: Returns a list of photographers URIs
+          schema:
+            type: array
+            items:
+              type: string
+  /photographer/{display_name}:
+    get:
+      # tags: [Photographer]
+      operationId: photographer_service.get_photographer
+      summary: Get a single photographer.
+      parameters:
+        - $ref: '#/parameters/display_name'
+      responses:
+        200:
+          description: Return the requested photographer.
+          schema:
+            $ref: '#/definitions/Photographer'
+        404:
+          description: Photographer does not exist.
+    delete:
+      operationId: photographer_service.delete_photographer
+      summary: Remove a photographer.
+      parameters:
+        - $ref: '#/parameters/display_name'
+      responses:
+        204:
+          description: Photographer was deleted.
+        404:
+          description: Photographer does not exist.
+
+parameters:
+  display_name:
+    name: display_name
+    description: display name of the photographer.
+    in: path
+    type: string
+    required: true
+    pattern: "^[a-zA-Z0-9-]+$"
+    x-example: 'joe'
+
+       
+definitions:
+  Photographer:
+    type: object
+    properties:
+      display_name:
+        type: string
+        description: |
+          The "nickname" of the user.  This is the name that will be
+          shown to other users of the system.
+        example: "Susie"
+        minLength: 1
+        maxLength: 100
+      first_name:
+        type: string
+        description: The first name of the user.
+        example: "Louis-Jacques-Mandé "
+        minLength: 1
+        maxLength: 100
+      last_name:
+        type: string
+        description: The first name of the user.
+        example: "Daguerre"
+        minLength: 1
+        maxLength: 100
+      interests:
+        type: array
+        description: The type of photos the user is interested in.
+        items:
+          type: string
+        example: ["landscape"]
+        minLength: 1
+

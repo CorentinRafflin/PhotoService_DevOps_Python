@@ -1,0 +1,178 @@
+---
+# based on the example at http://coderobot.downley.net/swagger-driven-testing-in-python.html
+
+swagger: '2.0'
+info:
+  title: Photo service API
+  version: "0.1"
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  /gallery/{display_name}:
+    get:
+      operationId: photo_service.get_photos
+      summary: Get photos 
+      parameters:
+        - $ref: '#/parameters/display_name'
+        - $ref: '#/parameters/offset'
+        - $ref: '#/parameters/limit'
+      responses:
+        200:
+          description: Returns a list of photos URIs
+          schema:
+            type: array
+            items:
+              type: string
+        404:
+          description: The display_name was not found
+
+    post:
+      operationId: photo_service.upload_photo
+      consumes:
+        - multipart/form-data
+      summary: Upload a new photo
+      parameters:
+        - $ref: '#/parameters/display_name'
+        - $ref: '#/parameters/upfile'
+      responses:
+        201:
+          description: Created
+        404:
+          description: The display_name was not found
+
+  /photo/{display_name}/{photo_id}:
+    get:
+      operationId: photo_service.get_photo
+      produces:
+        - image/jpeg
+      summary: Get photo
+      parameters:
+        - $ref: '#/parameters/display_name'        
+        - $ref: '#/parameters/photo_id'    
+      responses:
+        200:
+          description: Return the requested photo
+          schema:
+            type: file
+        404:
+          description: The display_name or the photo_id was not found
+    delete:
+      operationId: photo_service.delete_photo
+      summary: Remove a photo
+      parameters:
+        - $ref: '#/parameters/display_name'
+        - $ref: '#/parameters/photo_id'    
+      responses:
+        204:
+          description: Photo was deleted.
+        404:
+          description: The display_name or the photo_id was not found
+
+  /photo/{display_name}/{photo_id}/attributes:
+    get:
+      operationId: photo_service.get_photo_attributes
+      summary: Get photo attributes
+      parameters:
+        - $ref: '#/parameters/display_name'        
+        - $ref: '#/parameters/photo_id'    
+      responses:
+        200:
+          description: Return the attributes of the requested photo
+          schema:
+            $ref: '#/definitions/PhotoAttributes'
+        404:
+          description: The display_name or the photo_id was not found
+    put:
+      operationId: photo_service.set_photo_attributes
+      summary: set photo attributes
+      parameters:
+        - $ref: '#/parameters/display_name'        
+        - $ref: '#/parameters/photo_id'    
+        - in: body
+          name: attributes
+          schema:
+            $ref: '#/definitions/PhotoAttributes'
+      responses:
+        201:
+          description: OK
+        404:
+          description: The display_name or the photo_id was not found
+
+parameters:
+  display_name:
+    name: display_name
+    description: Display Name of a photographer
+    in: path
+    type: string
+    required: true
+    pattern: "^[a-zA-Z0-9-]+$"
+    x-example: 'jean'
+
+  upfile:
+    name: upfile
+    in: formData
+    type: file
+    required: true
+    description: the JPEG file to upload
+
+  offset:
+    name: offset
+    description: offset
+    in: query
+    type: integer
+    minimum: 0
+    default: 0
+    x-example: 0
+
+  limit:
+    name: limit
+    description: offset
+    in: query
+    type: integer
+    minimum: 0
+    default: 10
+    x-example: 10
+
+  photo_id:
+    name: photo_id
+    description: Unique identifier of the photo.
+    in: path
+    type: integer
+    required: true
+    default: 1
+    x-example: 1
+
+definitions:
+  PhotoAttributes:
+    type: object
+    properties:
+      location:
+        type: string
+        description: |
+          Where the photo has been taken (city, country or region)
+        example: "Paris"
+        minLength: 1
+        maxLength: 100
+      title:
+        type: string
+        description: The title of the photo
+        example: "Tour Eiffel"
+        minLength: 1
+        maxLength: 100
+      comment:
+        type: string
+        description: A comment about the photo
+        example: "Paris tour with my Friend joe"
+        minLength: 1
+        maxLength: 200
+      tags:
+        type: array
+        description: Tags
+        items:
+          type: string
+        example: ["monument", "paris", "eiffel tower"]
+        minLength: 1
+
